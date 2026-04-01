@@ -1,0 +1,17 @@
+# Virtual Environments
+venv/
+.venv/
+env/
+__pycache__/
+
+# Environment Variables
+.env
+.flaskenv
+
+# Editor files
+.vscode/
+.idea/
+
+# Audio / Static files
+static/audio/*.mp3
+static/audio/*.ogg

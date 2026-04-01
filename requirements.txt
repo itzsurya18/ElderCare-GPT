@@ -1,0 +1,6 @@
+Flask==2.3.3
+Twilio==8.0.0
+python-dotenv==1.0.0
+google-generativeai>=0.4.0
+gTTS>=2.5.0
+gunicorn>=20.1.0
