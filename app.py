@@ -28,8 +28,10 @@ def download_twilio_media(media_url):
         response = requests.get(
             media_url, 
             auth=(os.environ.get("TWILIO_ACCOUNT_SID"), os.environ.get("TWILIO_AUTH_TOKEN")),
-            stream=True
+            stream=True,
+            timeout=10
         )
+        print(f"Twilio Media Download Status: {response.status_code}", flush=True)
         if response.status_code == 200:
             ext = response.headers.get('Content-Type', '').split('/')[-1]
             if not ext or ext == 'octet-stream': ext = 'ogg'
@@ -40,7 +42,7 @@ def download_twilio_media(media_url):
                     f.write(chunk)
             return filepath
     except Exception as e:
-        print(f"Error downloading media: {e}")
+        print(f"Error downloading media: {e}", flush=True)
     return None
 
 def get_ai_response(text=None, audio_path=None):
@@ -55,7 +57,7 @@ def get_ai_response(text=None, audio_path=None):
     """
     
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         if audio_path:
             # Upload the file to Gemini's File API
