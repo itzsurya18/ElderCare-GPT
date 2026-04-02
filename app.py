@@ -82,7 +82,7 @@ def get_ai_response(text=None, audio_path=None):
     """
     
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         if audio_path:
             # Detect mime type from extension
