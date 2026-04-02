@@ -99,9 +99,12 @@ def get_ai_response(text=None, audio_path=None):
             response = model.generate_content(f"{base_prompt}\nPatient input: {text}")
         
         clean_text = response.text.strip().replace('*', '').replace('#', '')
+        print(f"AI Guidance Result: {clean_text}", flush=True)
         return clean_text
     except Exception as e:
+        import traceback
         print(f"Error calling Gemini: {e}", flush=True)
+        traceback.print_exc()
         return "I'm having trouble connecting to my medical database. Please consult a healthcare provider."
 
 def generate_tts(text):
@@ -145,7 +148,10 @@ def whatsapp_handler():
         msg = response.message(guidance)
         audio_filename = generate_tts(guidance)
         if audio_filename:
-            audio_url = request.host_url.rstrip('/') + url_for('static', filename=f'audio/{audio_filename}')
+            # Force HTTPS for Render/Twilio compatibility
+            base_url = request.host_url.replace('http://', 'https://').rstrip('/')
+            audio_url = base_url + url_for('static', filename=f'audio/{audio_filename}')
+            print(f"Sending Media URL to Twilio: {audio_url}", flush=True)
             msg.media(audio_url)
         return str(response)
 
@@ -161,8 +167,10 @@ def whatsapp_handler():
     audio_filename = generate_tts(guidance)
     
     if audio_filename:
-        # Construct the full URL to the audio file
-        audio_url = request.host_url.rstrip('/') + url_for('static', filename=f'audio/{audio_filename}')
+        # Force HTTPS for Render/Twilio compatibility
+        base_url = request.host_url.replace('http://', 'https://').rstrip('/')
+        audio_url = base_url + url_for('static', filename=f'audio/{audio_filename}')
+        print(f"Sending Media URL to Twilio: {audio_url}", flush=True)
         msg.media(audio_url)
 
     return str(response)
