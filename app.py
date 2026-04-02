@@ -82,20 +82,25 @@ def get_ai_response(text=None, audio_path=None):
     """
     
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         if audio_path:
-            # Upload the file to Gemini's File API
-            uploaded_file = genai.upload_file(path=audio_path)
-            # Wait for file to be processed (usually fast for audio)
-            while uploaded_file.state.name == "PROCESSING":
-                time.sleep(1)
-                uploaded_file = genai.get_file(uploaded_file.name)
+            # Detect mime type from extension
+            mime_type = 'audio/ogg'
+            if audio_path.endswith('.mp3'): mime_type = 'audio/mp3'
+            elif audio_path.endswith('.amr'): mime_type = 'audio/amr'
+
+            print(f"Processing audio with Gemini (Inline Data)...", flush=True)
+            with open(audio_path, 'rb') as f:
+                audio_data = f.read()
             
-            response = model.generate_content([base_prompt, uploaded_file])
-            # Optional: delete file from Gemini storage after use
-            genai.delete_file(uploaded_file.name)
+            audio_part = {
+                "mime_type": mime_type,
+                "data": audio_data
+            }
+            response = model.generate_content([base_prompt, audio_part])
         else:
+            print("Processing text with Gemini...", flush=True)
             response = model.generate_content(f"{base_prompt}\nPatient input: {text}")
         
         clean_text = response.text.strip().replace('*', '').replace('#', '')
