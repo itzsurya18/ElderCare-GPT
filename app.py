@@ -18,31 +18,56 @@ app = Flask(__name__)
 
 # Ensure static/audio and uploads directory exist
 AUDIO_DIR = os.path.join(app.static_folder, 'audio') if app.static_folder else os.path.join(app.root_path, 'static', 'audio')
-UPLOAD_DIR = os.path.join(app.root_path, 'uploads')
+UPLOAD_DIR = '/tmp' if os.path.exists('/tmp') else os.path.join(app.root_path, 'uploads')
 os.makedirs(AUDIO_DIR, exist_ok=True)
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 def download_twilio_media(media_url):
     """Securely downloads media from Twilio using Account SID and Auth Token."""
+    sid = os.environ.get("TWILIO_ACCOUNT_SID")
+    token = os.environ.get("TWILIO_AUTH_TOKEN")
+    
+    print(f"Attempting download from: {media_url}", flush=True)
+    print(f"Credentials Check - SID: {sid[:4] if sid else 'None'}... Token: {token[:4] if token else 'None'}...", flush=True)
+
     try:
+        # First, try with authentication (required if Twilio project settings are restrictive)
         response = requests.get(
             media_url, 
-            auth=(os.environ.get("TWILIO_ACCOUNT_SID"), os.environ.get("TWILIO_AUTH_TOKEN")),
+            auth=(sid, token),
             stream=True,
-            timeout=10
+            timeout=15
         )
-        print(f"Twilio Media Download Status: {response.status_code}", flush=True)
+        
+        print(f"Twilio Download Initial Status: {response.status_code}", flush=True)
+        
+        # If it failed with 401 or similar, try without auth (if media is public)
+        if response.status_code != 200:
+            print("Auth failed, attempting without credentials...", flush=True)
+            response = requests.get(media_url, stream=True, timeout=15)
+            print(f"Unauthenticated Download Status: {response.status_code}", flush=True)
+
         if response.status_code == 200:
-            ext = response.headers.get('Content-Type', '').split('/')[-1]
-            if not ext or ext == 'octet-stream': ext = 'ogg'
+            # Detect extension from Content-Type
+            content_type = response.headers.get('Content-Type', '')
+            ext = 'ogg' # Default for WhatsApp
+            if 'mpeg' in content_type: ext = 'mp3'
+            elif 'amr' in content_type: ext = 'amr'
+            
             filename = f"user_{uuid.uuid4().hex}.{ext}"
             filepath = os.path.join(UPLOAD_DIR, filename)
+            
             with open(filepath, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=1024):
                     f.write(chunk)
+            
+            file_size = os.path.getsize(filepath)
+            print(f"Successfully downloaded to {filepath} ({file_size} bytes)", flush=True)
             return filepath
+        else:
+            print(f"Failed all download attempts. Final Status: {response.status_code}", flush=True)
     except Exception as e:
-        print(f"Error downloading media: {e}", flush=True)
+        print(f"Error during media download: {e}", flush=True)
     return None
 
 def get_ai_response(text=None, audio_path=None):
