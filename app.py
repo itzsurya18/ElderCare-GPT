@@ -5,6 +5,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 from twilio.twiml.voice_response import VoiceResponse
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 from gtts import gTTS
 import requests
 import time
@@ -95,7 +96,10 @@ def get_ai_response(text=None, audio_path=None):
             
             response = client.models.generate_content(
                 model='gemini-flash-latest',
-                contents=[base_prompt, {"mime_type": mime_type, "data": audio_data}]
+                contents=[
+                    base_prompt, 
+                    types.Part.from_bytes(data=audio_data, mime_type=mime_type)
+                ]
             )
         else:
             print("Processing text with Gemini...", flush=True)
