@@ -104,7 +104,7 @@ def get_ai_response(text=None, audio_path=None):
         else:
             print("Processing text with Gemini...", flush=True)
             response = client.models.generate_content(
-                model='gemini-flash-latest', 
+                model='gemini-2.5-flash-lite', 
                 contents=f"{base_prompt}\nPatient input: {text}"
             )
         
