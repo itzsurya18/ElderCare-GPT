@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, url_for
 from twilio.twiml.messaging_response import MessagingResponse
 from twilio.twiml.voice_response import VoiceResponse
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
 from gtts import gTTS
 import requests
 import time
@@ -12,7 +12,8 @@ import time
 load_dotenv()
 
 # Configure Gemini
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
+# Initialize Gemini Client
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 app = Flask(__name__)
 
@@ -82,8 +83,6 @@ def get_ai_response(text=None, audio_path=None):
     """
     
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
-        
         if audio_path:
             # Detect mime type from extension
             mime_type = 'audio/ogg'
@@ -94,14 +93,16 @@ def get_ai_response(text=None, audio_path=None):
             with open(audio_path, 'rb') as f:
                 audio_data = f.read()
             
-            audio_part = {
-                "mime_type": mime_type,
-                "data": audio_data
-            }
-            response = model.generate_content([base_prompt, audio_part])
+            response = client.models.generate_content(
+                model='gemini-1.5-flash',
+                contents=[base_prompt, {"mime_type": mime_type, "data": audio_data}]
+            )
         else:
             print("Processing text with Gemini...", flush=True)
-            response = model.generate_content(f"{base_prompt}\nPatient input: {text}")
+            response = client.models.generate_content(
+                model='gemini-1.5-flash', 
+                contents=f"{base_prompt}\nPatient input: {text}"
+            )
         
         clean_text = response.text.strip().replace('*', '').replace('#', '')
         print(f"AI Guidance Result: {clean_text}", flush=True)
