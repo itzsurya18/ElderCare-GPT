@@ -15,14 +15,6 @@ load_dotenv()
 # Initialize Gemini Client
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-# Debug: Print available models to Railway logs
-try:
-    print("Listing available Gemini models...", flush=True)
-    for m in client.models.list():
-        print(f"Available Model: {m.name}", flush=True)
-except Exception as e:
-    print(f"Error listing models: {e}", flush=True)
-
 app = Flask(__name__)
 
 # Ensure static/audio and uploads directory exist
@@ -102,13 +94,13 @@ def get_ai_response(text=None, audio_path=None):
                 audio_data = f.read()
             
             response = client.models.generate_content(
-                model='gemini-1.5-pro',
+                model='gemini-flash-latest',
                 contents=[base_prompt, {"mime_type": mime_type, "data": audio_data}]
             )
         else:
             print("Processing text with Gemini...", flush=True)
             response = client.models.generate_content(
-                model='gemini-1.5-pro', 
+                model='gemini-flash-latest', 
                 contents=f"{base_prompt}\nPatient input: {text}"
             )
         
