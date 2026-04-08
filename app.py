@@ -94,13 +94,13 @@ def get_ai_response(text=None, audio_path=None):
                 audio_data = f.read()
             
             response = client.models.generate_content(
-                model='gemini-1.5-flash',
+                model='gemini-2.0-flash',
                 contents=[base_prompt, {"mime_type": mime_type, "data": audio_data}]
             )
         else:
             print("Processing text with Gemini...", flush=True)
             response = client.models.generate_content(
-                model='gemini-1.5-flash', 
+                model='gemini-2.0-flash', 
                 contents=f"{base_prompt}\nPatient input: {text}"
             )
         
