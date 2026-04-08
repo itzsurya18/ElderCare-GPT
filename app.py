@@ -95,7 +95,7 @@ def get_ai_response(text=None, audio_path=None):
                 audio_data = f.read()
             
             response = client.models.generate_content(
-                model='gemini-flash-latest',
+                model='gemini-2.5-flash-lite',
                 contents=[
                     base_prompt, 
                     types.Part.from_bytes(data=audio_data, mime_type=mime_type)
